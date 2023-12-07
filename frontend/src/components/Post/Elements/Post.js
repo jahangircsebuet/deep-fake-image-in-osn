@@ -11,10 +11,10 @@ import { makeLike, removeLike } from "../../../store/likes";
 function Post({ post }) {
     const dispatch = useDispatch();
 
-    const user = useSelector(state => state.session.user);
+    const user = localStorage.getItem("user");
     const friends = [];
 //    useSelector(state => state.friends);
-    const comments = Object.values(useSelector(state => state.posts[post.id].comments));
+    const comments = [];
    
     const likes = [];
 //    Object.values(useSelector(state => state.likes)).filter(

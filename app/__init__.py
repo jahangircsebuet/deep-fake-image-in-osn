@@ -327,20 +327,27 @@ def authenticate(user=None, token=None):
     Authenticates a user.
     """
     print("/authenticate")
-    print("user: ", user)
-    print("token: ", token)
     token = request.headers.get("token")
     print("header.token: ", token)
-
     if token == 'null':
         token = None
     if token is not None:
-        return jsonify({'success': True, 'isAuthenticated': True, 'user': None, 'token': token,
+        token_decoded = jwt.decode(
+            token,
+            "secret",
+            algorithms=['HS256']
+        )
+        print("user email: ", token_decoded['email'])
+        user = User.query.filter(User.email == token_decoded['email']).first()
+        print("user", user)
+        print(user.id)
+        posts = get_posts(user_id=user.id)
+        return jsonify({'success': True, 'isAuthenticated': True, 'posts': posts, 'user': user.to_dict(), 'token': token,
                         'message': 'Authentication'
                                    ' successful!'})
     else:
         return jsonify(
-            {'success': False, 'isAuthenticated': False, 'user': None, 'token': None, 'message': 'Authentication'
+            {'success': False, 'isAuthenticated': False, 'posts': None, 'user': None, 'token': None, 'message': 'Authentication'
                                                                                                  ' failed!'})
 
 
@@ -370,17 +377,25 @@ def login():
         return {'errors': [], 'success': False, 'message': 'User does not exist!'}
 
     if check_password_hash(user.password, content['password']):
-        token = jwt.encode({'email': user.email, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45)},
+        token = jwt.encode({'email': user.email, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60)},
                            'secret', "HS256")
-        token_decoded = jwt.decode(
-            token,
-            "secret",
-            algorithms=['HS256']
-        )
-        print("token_decoded")
-        print(token_decoded)
 
-        return jsonify({'token': token, 'isAuthenticated': True, 'user': user.to_dict()})
+        posts = []
+        try:
+            my_posts = Post.query.filter(Post.user_id == user.id).all()
+            for p in my_posts:
+                p_dict = p.to_dict()
+                comments = []
+                for c in p.comments:
+                    comments.append(c.to_dict())
+                print(comments)
+                p_dict['comments'] = comments
+                posts.append(p_dict)
+        except Exception as e:
+            print(e)
+            return jsonify({'token': None, 'isAuthenticated': False, 'user': None})
+
+        return jsonify({'token': token, 'isAuthenticated': True, 'user': user.to_dict(), 'posts': posts})
     return {'errors': [], 'success': False, 'isAuthenticated': False}
 
 
@@ -427,6 +442,12 @@ def read_posts(user=None, token=None):
         print("user not found!")
         return jsonify({'posts': None, 'success': False, 'message': 'Authentication failed!'})
 
+    token_decoded = jwt.decode(
+        token,
+        "secret",
+        algorithms=['HS256']
+    )
+
     # TODO friends posts
     # posts = Post.query.select_from(User).join(Friend,
     #                                           or_(Friend.friend_id == User.id, Friend.user_id == User.id)).filter(
@@ -435,12 +456,23 @@ def read_posts(user=None, token=None):
 
     # my_posts = Post.query.filter(Post.user_id == user.id).all()
     # TODO replace user id
-    user = request.headers.get("user")
-    print("header.user: ", user)
 
+    print("user email: ", token_decoded['email'])
+    user = User.query.filter(User.email == token_decoded['email']).first()
+    print("user", user)
+    print(user.id)
+
+    posts = get_posts(user.id)
+    if len(posts) == 0:
+        return jsonify({'posts': None, 'success': False, 'message': 'Posts read failed!'})
+    else:
+        return jsonify({'posts': posts, 'success': True, 'message': 'Posts read successfully!'})
+
+
+def get_posts(user_id):
+    posts = []
     try:
-        my_posts = Post.query.filter(Post.user_id == user.id).all()
-        posts = []
+        my_posts = Post.query.filter(Post.user_id == user_id).all()
         for p in my_posts:
             p_dict = p.to_dict()
             comments = []
@@ -449,11 +481,9 @@ def read_posts(user=None, token=None):
             print(comments)
             p_dict['comments'] = comments
             posts.append(p_dict)
-        return jsonify({'posts': posts, 'success': True, 'message': 'Posts read successfully!'})
     except Exception as e:
         print(e)
-        return jsonify({'posts': None, 'success': False, 'message': 'Posts read failed!'})
-
+    return posts
 
 @app.route('/posts', methods=['POST'])
 # @decorators.token_required

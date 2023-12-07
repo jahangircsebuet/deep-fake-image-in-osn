@@ -46,10 +46,26 @@ export const makePost = (text, image_link) => async dispatch => {
         body: JSON.stringify({ text, image_link, created_at, edited_at }),
     });
     if (response.ok) {
-
+        localStorage.setItem("testdata", JSON.stringify([1, 2, 3]));
         const data = await response.json();
         console.log("POST /posts response");
         console.log(data);
+        let posts = JSON.parse(localStorage.getItem("posts"));
+        if(posts == null) {
+            console.log("posts exist");
+            let posts = [];
+            posts.push(data.post);
+            localStorage.setItem("posts", JSON.stringify(posts));
+        } else {
+            posts.push(data.post);
+            console.log("posts does not exist");
+        }
+
+        console.log("posts")
+        console.log(posts);
+
+
+
 
         dispatch(createPost(data.post));
         return null;
@@ -80,6 +96,10 @@ export const getPosts = () => async dispatch => {
     if (response.ok) {
         const data = await response.json();
         if(data.success) {
+            let posts = JSON.parse(localStorage.getItem("posts"));
+            if(posts == null) {
+                localStorage.getItem("posts", JSON.stringify(data.posts));
+            }
             // TODO fix the image url
             dispatch(readPosts(data));
         }

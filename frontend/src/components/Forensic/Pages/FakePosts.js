@@ -5,17 +5,12 @@ import Post from "../../Post/Elements/Post";
 import { getPosts } from "../../../store/posts";
 import { getFriends } from "../../../store/friends";
 
-function PostFeed() {
-    console.log("PostFeed");
-//    const data = await dispatch(getPosts());
+function FakePosts() {
+    console.log("FakePosts Page");
+
     let posts = JSON.parse(localStorage.getItem("posts"));
     console.log("posts read from local storage");
     console.log(posts);
-
-    let friends = [];
-    let user = JSON.parse(localStorage.getItem("user"));
-    console.log("user");
-    console.log(user);
 
 //
 //    const dispatch = useDispatch();

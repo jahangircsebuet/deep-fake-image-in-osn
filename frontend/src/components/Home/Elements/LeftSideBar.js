@@ -19,12 +19,13 @@ function LeftSideBar() {
 //    }, [user]);
 
     let user = localStorage.getItem('user');
+    user = JSON.parse(user);
 
     return (
         <div id="left-sidebar">
             <Link to={`/profile/${user.id}/`}>
                 <img
-                    src={profilePic}
+                    src={user.profile_pic}
                     alt="profile"
                     className="profile-img-circle"
                     onError={() => setProfilePic(defaultProfileIcon)}

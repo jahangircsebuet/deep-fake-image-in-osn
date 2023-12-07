@@ -59,6 +59,10 @@ function App() {
                     element={<LogoutPage />}
                 />
                 <Route
+                    path="/investigation"
+                    element={<Investigation />}
+                />
+                <Route
                     path=""
                     element={<Home />}
                 />

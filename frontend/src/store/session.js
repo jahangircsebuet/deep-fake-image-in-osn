@@ -53,7 +53,7 @@ export const authenticate = () => async dispatch => {
     let token = null;
     if(localStorage.getItem("token")) {
         token = localStorage.getItem("token");
-        dispatch(readUser());
+//        dispatch(readUser());
     }
     console.log("token: " + token);
     const response = await fetch("http://localhost:5000/authenticate", {
@@ -69,7 +69,6 @@ export const authenticate = () => async dispatch => {
         const data = await response.json();
         console.log("authenticate response data");
         console.log(data);
-
         dispatch(setUser(data));
     }
 };
@@ -275,13 +274,21 @@ export default function reducer(state = initialState, action) {
             if(action.payload.isAuthenticated) {
                 // set the access token
                 localStorage.setItem("token", action.payload.token);
+                console.log("action.payload.token: " + action.payload.token);
+
                 localStorage.setItem("user", JSON.stringify(action.payload.user));
+                console.log("user: " + JSON.stringify(action.payload.user));
+
                 localStorage.setItem("isAuthenticated", action.payload.isAuthenticated);
+                console.log("action.payload.isAuthenticated: " + action.payload.isAuthenticated);
+
+                localStorage.setItem("posts", JSON.stringify(action.payload.posts));
+                console.log("posts: " + JSON.stringify(action.payload.posts));
+
                 user = action.payload.user;
                 authenticated = action.payload.isAuthenticated;
                 token = action.payload.token;
             }
-                
             return { 
                 user: user,
                 isAuthenticated: authenticated,
@@ -296,6 +303,8 @@ export default function reducer(state = initialState, action) {
         case REMOVE_USER:
             console.log("REMOVE_USER reducer");
             localStorage.setItem("token", null);
+            localStorage.setItem("user", null);
+            localStorage.setItem("posts", null);
             
             const removeState = { ...state };
             removeState.user = null;
